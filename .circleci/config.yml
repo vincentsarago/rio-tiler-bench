@@ -20,8 +20,8 @@ jobs:
       - image: remotepixel/amazonlinux:gdal3.0-py3.7-cogeo
         environment:
           - GDAL_VERSION=3.0
-      	  - GDAL_HTTP_MULTIPLEX=YES
-      	  - GDAL_HTTP_VERSION=2
+          - GDAL_HTTP_MULTIPLEX=YES
+          - GDAL_HTTP_VERSION=2
           - GDAL_HTTP_MULTIRANGE=YES
           - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
           - VSI_CACHE=TRUE
@@ -33,8 +33,8 @@ jobs:
       - image: remotepixel/amazonlinux:gdal2.4-py3.7-cogeo
         environment:
           - GDAL_VERSION=2.4
-      	  - GDAL_HTTP_MULTIPLEX=YES
-      	  - GDAL_HTTP_VERSION=2
+          - GDAL_HTTP_MULTIPLEX=YES
+          - GDAL_HTTP_VERSION=2
           - GDAL_HTTP_MULTIRANGE=YES
           - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
           - VSI_CACHE=TRUE
