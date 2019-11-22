@@ -8,10 +8,15 @@ common: &common
         command: pip install .
     - run:
         name: install rio-tiler WIP branch
-        command: git+https://github.com/cogeotiff/rio-tiler.git@2f4ef42cdc78c74599c21be3c6e4d89bc6474753 -U
+        command: pip install git+https://github.com/cogeotiff/rio-tiler.git@2f4ef42cdc78c74599c21be3c6e4d89bc6474753 -U
     - run:
         name: run benchmark
-        command: python -m rio_tiler_bench > bench_${GDAL_VERSION}.json
+        command: |
+          mkdir -p /tmp/reports
+          python -m rio_tiler_bench > /tmp/reports/bench_${GDAL_VERSION}.json
+
+    - store_artifacts:
+        path: /tmp/reports/
 
 jobs:
   "gdal3":
