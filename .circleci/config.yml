@@ -1,0 +1,48 @@
+version: 2
+common: &common
+  working_directory: ~/rio-tiler-bench
+  steps:
+    - checkout
+    - run:
+        name: install dependencies
+        command: pip install .
+    - run:
+        name: install rio-tiler WIP branch
+        command: git+https://github.com/cogeotiff/rio-tiler.git@2f4ef42cdc78c74599c21be3c6e4d89bc6474753 -U
+    - run:
+        name: run benchmark
+        command: python -m rio_tiler_bench > bench_${GDAL_VERSION}.json
+
+jobs:
+  "gdal3":
+    <<: *common
+    docker:
+      - image: remotepixel/amazonlinux:gdal3.0-py3.7-cogeo
+        environment:
+          - GDAL_VERSION=3.0
+      	  - GDAL_HTTP_MULTIPLEX=YES
+      	  - GDAL_HTTP_VERSION=2
+          - GDAL_HTTP_MULTIRANGE=YES
+          - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
+          - VSI_CACHE=TRUE
+          - VSI_CACHE_SIZE=1073741824
+
+  "gdal2":
+    <<: *common
+    docker:
+      - image: remotepixel/amazonlinux:gdal2.4-py3.7-cogeo
+        environment:
+          - GDAL_VERSION=2.4
+      	  - GDAL_HTTP_MULTIPLEX=YES
+      	  - GDAL_HTTP_VERSION=2
+          - GDAL_HTTP_MULTIRANGE=YES
+          - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
+          - VSI_CACHE=TRUE
+          - VSI_CACHE_SIZE=1073741824
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - "gdal3"
+      - "gdal2"
