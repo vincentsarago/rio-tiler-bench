@@ -21,9 +21,9 @@ FNULL = open(os.devnull, "w")
 
 def _gdal_read(src_path, bounds, tilesize=256):
     left, bottom, right, top = bounds
-    cmd = f"""gdal_translate -q {src_path} out.tif \
-    -projwin {left} {top} {right} {bottom} -projwin_srs EPSG:3857 \
-    -outsize {tilesize} {tilesize} \
+    cmd = f"""gdalwarp -q {src_path} out.tif \
+    -te {left} {top} {right} {bottom} -t_srs EPSG:3857 \
+    -ts {tilesize} {tilesize} -r bilinear \
     --config GDAL_DISABLE_READDIR_ON_OPEN EMPTY_DIR \
     --config CPL_VSIL_CURL_ALLOWED_EXTENSIONS .tif \
     --config CPL_DEBUG ON"""
@@ -43,14 +43,16 @@ def _gdal_read(src_path, bounds, tilesize=256):
         get_values = [map(int, get.split(" ")[2].split("-")) for get in get_requests]
         data_transfer = sum([j - i for i, j in get_values])
 
-        warp_info = [l for l in lines if l.startswith("WARP: Selecting overview level")]
+        warp_info = [l for l in lines if l.startswith("WARP: Selecting overview")]
         if warp_info:
-            ovr_level = warp_info[0].splirt(" ")[4]
+            ovr_level = warp_info[0].split(" ")[4]
         else:
             ovr_level = -1
 
         kernels = [
-            (l.split(" ")[-2], l.split(" ")[-1]) for l in lines if "GDALWarpKernel" in l
+            (l.split(" ")[-2], l.split(" ")[-1])
+            for l in lines
+            if l.startswith("GDAL: GDALWarpKernel()")
         ]
 
         os.remove("output.log")
@@ -68,7 +70,7 @@ def _gdal_read(src_path, bounds, tilesize=256):
 def _rio_tiler_read(src_path, bounds, tilesize=256):
     # Configure Logs
     stream = StringIO()
-    logger = logging.getLogger("rasterio")
+    logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     for handler in logger.handlers:
         logger.removeHandler(handler)
@@ -84,13 +86,7 @@ def _rio_tiler_read(src_path, bounds, tilesize=256):
     with rasterio.Env(**config):
         start = time.time()
         with rasterio.open(src_path) as src_dst:
-            utils._tile_read(
-                src_dst,
-                bounds,
-                tilesize,
-                tile_edge_padding=0,
-                warp_vrt_option=dict(SOURCE_EXTRA=1),
-            )
+            utils._tile_read(src_dst, bounds, tilesize, tile_edge_padding=0)
         end = time.time()
 
     lines = stream.getvalue().splitlines()
@@ -102,8 +98,10 @@ def _rio_tiler_read(src_path, bounds, tilesize=256):
     get_values = [map(int, get.split(" ")[4].split("-")) for get in get_requests]
     data_transfer = sum([j - i for i, j in get_values])
 
-    ovr_level = [l.split(" ")[3] for l in lines if "Selecting overview level" in l]
-    if not ovr_level:
+    warp_info = [l for l in lines if "Selecting overview level" in l]
+    if warp_info:
+        ovr_level = warp_info[0].split(" ")[3]
+    else:
         ovr_level = -1
 
     kernels = [
