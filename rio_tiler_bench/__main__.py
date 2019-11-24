@@ -214,4 +214,4 @@ if __name__ == "__main__":
 
         src_paths[idx]["bench"] = {"gdal": gdal, "rio-tiler": rio}
 
-    print(json.dumps(src_paths))
+    print(json.dumps(src_paths, indent=4))

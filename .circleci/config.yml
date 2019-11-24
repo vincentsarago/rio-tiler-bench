@@ -13,7 +13,23 @@ common: &common
         name: run benchmark
         command: |
           mkdir -p /tmp/reports
-          python -m rio_tiler_bench > /tmp/reports/bench_${GDAL_VERSION}.json
+          python -m rio_tiler_bench > /tmp/reports/bench_gdal${GDAL_VERSION}.json
+
+    - store_artifacts:
+        path: /tmp/reports/
+
+old: &old
+  working_directory: ~/rio-tiler-bench
+  steps:
+    - checkout
+    - run:
+        name: install dependencies
+        command: pip install .
+    - run:
+        name: run benchmark
+        command: |
+          mkdir -p /tmp/reports
+          python -m rio_tiler_bench > /tmp/reports/bench_gdal${GDAL_VERSION}_old.json
 
     - store_artifacts:
         path: /tmp/reports/
@@ -45,9 +61,38 @@ jobs:
           - VSI_CACHE=TRUE
           - VSI_CACHE_SIZE=1073741824
 
+  "gdal3old":
+    <<: *old
+    docker:
+      - image: remotepixel/amazonlinux:gdal3.0-py3.7-cogeo
+        environment:
+          - GDAL_VERSION=3.0
+          - GDAL_HTTP_MULTIPLEX=YES
+          - GDAL_HTTP_VERSION=2
+          - GDAL_HTTP_MULTIRANGE=YES
+          - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
+          - VSI_CACHE=TRUE
+          - VSI_CACHE_SIZE=1073741824
+
+  "gdal2old":
+    <<: *old
+    docker:
+      - image: remotepixel/amazonlinux:gdal2.4-py3.7-cogeo
+        environment:
+          - GDAL_VERSION=2.4
+          - GDAL_HTTP_MULTIPLEX=YES
+          - GDAL_HTTP_VERSION=2
+          - GDAL_HTTP_MULTIRANGE=YES
+          - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
+          - VSI_CACHE=TRUE
+          - VSI_CACHE_SIZE=1073741824
+
+
 workflows:
   version: 2
   build_and_test:
     jobs:
       - "gdal3"
       - "gdal2"
+      - "gdal3old"
+      - "gdal2old"
