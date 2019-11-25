@@ -27,13 +27,13 @@ run:
 ################################################################################
 # TESTS
 test2: gdal2 run
-	docker exec -it bench bash -c 'python -m rio_tiler_bench > /local/gdal2.4_results.json'
+	docker exec -it bench bash -c 'python -m rio_tiler_bench > /local/benchmark_gdal2.4.json'
 	docker stop bench
 	docker rm bench
 
 
 test3: gdal3 run
-	docker exec -it bench bash -c 'python -m rio_tiler_bench > /local/gdal3.0_results.json'
+	docker exec -it bench bash -c 'python -m rio_tiler_bench > /local/benchmark_gdal3.0.json'
 	docker stop bench
 	docker rm bench
 
