@@ -13,12 +13,15 @@ run:
 	docker run \
 		--name bench \
 		--volume $(shell pwd):/local \
-      	--env GDAL_HTTP_MULTIPLEX=YES \
-      	--env GDAL_HTTP_VERSION=2 \
-		--env GDAL_HTTP_MULTIRANGE=YES \
+		--env CPL_VSIL_CURL_ALLOWED_EXTENSIONS=.tif \
+		--env GDAL_CACHEMAX=25% \
+		--env GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR \
 		--env GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES \
+      	--env GDAL_HTTP_MULTIPLEX=YES \
+		--env GDAL_HTTP_MULTIRANGE=YES \
+      	--env GDAL_HTTP_VERSION=2 \
 		--env VSI_CACHE=TRUE \
-		--env VSI_CACHE_SIZE=1073741824 \
+		--env VSI_CACHE_SIZE=536870912 \
 		-itd img:latest /bin/bash
 
 ################################################################################
