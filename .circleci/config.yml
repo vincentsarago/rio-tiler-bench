@@ -18,22 +18,6 @@ common: &common
     - store_artifacts:
         path: /tmp/reports/
 
-old: &old
-  working_directory: ~/rio-tiler-bench
-  steps:
-    - checkout
-    - run:
-        name: install dependencies
-        command: pip install .
-    - run:
-        name: run benchmark
-        command: |
-          mkdir -p /tmp/reports
-          python -m rio_tiler_bench > /tmp/reports/bench_gdal${GDAL_VERSION}_old.json
-
-    - store_artifacts:
-        path: /tmp/reports/
-
 jobs:
   "gdal3":
     <<: *common
@@ -41,12 +25,15 @@ jobs:
       - image: remotepixel/amazonlinux:gdal3.0-py3.7-cogeo
         environment:
           - GDAL_VERSION=3.0
-          - GDAL_HTTP_MULTIPLEX=YES
-          - GDAL_HTTP_VERSION=2
-          - GDAL_HTTP_MULTIRANGE=YES
+          - CPL_VSIL_CURL_ALLOWED_EXTENSIONS=.tif
+          - GDAL_CACHEMAX=25%
+          - GDAL_DISABLE_READDIR_ON_OPE=EMPTY_DIR
           - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
+          - GDAL_HTTP_MULTIPLEX=YES
+          - GDAL_HTTP_MULTIRANGE=YES
+          - GDAL_HTTP_VERSION=2
           - VSI_CACHE=TRUE
-          - VSI_CACHE_SIZE=1073741824
+          - VSI_CACHE_SIZE=536870912
 
   "gdal2":
     <<: *common
@@ -54,39 +41,15 @@ jobs:
       - image: remotepixel/amazonlinux:gdal2.4-py3.7-cogeo
         environment:
           - GDAL_VERSION=2.4
-          - GDAL_HTTP_MULTIPLEX=YES
-          - GDAL_HTTP_VERSION=2
-          - GDAL_HTTP_MULTIRANGE=YES
+          - CPL_VSIL_CURL_ALLOWED_EXTENSIONS=.tif
+          - GDAL_CACHEMAX=25%
+          - GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR
           - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
-          - VSI_CACHE=TRUE
-          - VSI_CACHE_SIZE=1073741824
-
-  "gdal3old":
-    <<: *old
-    docker:
-      - image: remotepixel/amazonlinux:gdal3.0-py3.7-cogeo
-        environment:
-          - GDAL_VERSION=3.0
           - GDAL_HTTP_MULTIPLEX=YES
-          - GDAL_HTTP_VERSION=2
           - GDAL_HTTP_MULTIRANGE=YES
-          - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
-          - VSI_CACHE=TRUE
-          - VSI_CACHE_SIZE=1073741824
-
-  "gdal2old":
-    <<: *old
-    docker:
-      - image: remotepixel/amazonlinux:gdal2.4-py3.7-cogeo
-        environment:
-          - GDAL_VERSION=2.4
-          - GDAL_HTTP_MULTIPLEX=YES
           - GDAL_HTTP_VERSION=2
-          - GDAL_HTTP_MULTIRANGE=YES
-          - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
           - VSI_CACHE=TRUE
-          - VSI_CACHE_SIZE=1073741824
-
+          - VSI_CACHE_SIZE=536870912
 
 workflows:
   version: 2
@@ -94,5 +57,3 @@ workflows:
     jobs:
       - "gdal3"
       - "gdal2"
-      - "gdal3old"
-      - "gdal2old"

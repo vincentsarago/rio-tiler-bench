@@ -24,8 +24,6 @@ def _gdal_read(src_path, bounds, tilesize=256):
     cmd = f"""gdalwarp -q {src_path} out.tif \
     -te {left} {top} {right} {bottom} -t_srs EPSG:3857 \
     -ts {tilesize} {tilesize} -r bilinear \
-    --config GDAL_DISABLE_READDIR_ON_OPEN EMPTY_DIR \
-    --config CPL_VSIL_CURL_ALLOWED_EXTENSIONS .tif \
     --config CPL_DEBUG ON"""
     try:
         with open("output.log", "w") as f:
@@ -78,11 +76,7 @@ def _rio_tiler_read(src_path, bounds, tilesize=256):
     handler = logging.StreamHandler(stream)
     logger.addHandler(handler)
 
-    config = dict(
-        GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR",
-        CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif",
-        CPL_DEBUG="ON",
-    )
+    config = dict(CPL_DEBUG="ON")
     with rasterio.Env(**config):
         start = time.time()
         with rasterio.open(src_path) as src_dst:
@@ -153,54 +147,54 @@ def _get_tiles(src_path, nb_tiles=5):
 
 if __name__ == "__main__":
     # Images have beein `COGify` to have internal overview and nodata value set
+    endpoint = os.environ.get(
+        "ENDPOINT", "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler"
+    )
+
     src_paths = [
         {
             "where": "Canada",
             "tile": "9-115-123",
-            "src_path": "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_040013_20191014_20191029_01_T1_B4.tif",
+            "src_path": f"{endpoint}/LC08_L1TP_040013_20191014_20191029_01_T1_B4.tif",
+            "bench": {"gdal": {}, "rio-tiler": {}},
         },
         {
             "where": "France",
             "tile": "9-255-179",
-            "src_path": "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_201027_20191022_20191030_01_T1_B4.tif",
+            "src_path": f"{endpoint}/LC08_L1TP_201027_20191022_20191030_01_T1_B4.tif",
+            "bench": {"gdal": {}, "rio-tiler": {}},
         },
         {
             "where": "Chile",
             "tile": "9-148-345",
-            "src_path": "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_231097_20190906_20190917_01_T1_B4.tif",
+            "src_path": f"{endpoint}/LC08_L1TP_231097_20190906_20190917_01_T1_B4.tif",
+            "bench": {"gdal": {}, "rio-tiler": {}},
         },
         {
             "where": "Brazil",
             "tile": "9-185-255",
-            "src_path": "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_224060_20171204_20171222_01_T1_B4.tif",
+            "src_path": f"{endpoint}/LC08_L1TP_224060_20171204_20171222_01_T1_B4.tif",
+            "bench": {"gdal": {}, "rio-tiler": {}},
         },
         {
             "where": "NewZealand",
             "tile": "9-504-315",
-            "src_path": "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_073087_20190818_20190902_01_T1_B4.tif",
+            "src_path": f"{endpoint}/LC08_L1TP_073087_20190818_20190902_01_T1_B4.tif",
+            "bench": {"gdal": {}, "rio-tiler": {}},
         },
         {
             "where": "Antartica",
             "tile": "9-100-425",
-            "src_path": "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1GT_008113_20191115_20191115_01_RT_B4.tif",
+            "src_path": f"{endpoint}/LC08_L1GT_008113_20191115_20191115_01_RT_B4.tif",
+            "bench": {"gdal": {}, "rio-tiler": {}},
         },
         {
             "where": "Australia",
             "tile": "9-417-292",
-            "src_path": "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_115077_20191113_20191115_01_T1_B4.tif",
+            "src_path": f"{endpoint}/LC08_L1TP_115077_20191113_20191115_01_T1_B4.tif",
+            "bench": {"gdal": {}, "rio-tiler": {}},
         },
     ]
-
-    # src_paths = [
-    #     # Web Optimized
-    #     {"where": "Canada", "tile": "9-115-123", "src_path": "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_040013_20191014_20191029_01_T1_B4_web.tif"},
-    #     {"where": "France", "tile": "9-255-179", "src_path": "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_201027_20191022_20191030_01_T1_B4_web.tif"},
-    #     {"where": "Chile", "tile": "9-148-345", "src_path": "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_231097_20190906_20190917_01_T1_B4_web.tif"},
-    #     {"where": "Brazil", "tile": "9-185-255", "src_path": "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_224060_20171204_20171222_01_T1_B4_web.tif"},
-    #     {"where": "NewZealand", "tile": "9-504-315", "src_path": "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_073087_20190818_20190902_01_T1_B4_web.tif"},
-    #     {"where": "Antartica", "tile": "9-100-425", "src_path": "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1GT_008113_20191115_20191115_01_RT_B4_web.tif"},
-    #     {"where": "Australia", "tile": "9-417-292", "src_path": "https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_115077_20191113_20191115_01_T1_B4_web.tif"},
-    # ]
 
     for idx in range(len(src_paths)):
         src_path = src_paths[idx]["src_path"]
@@ -210,8 +204,9 @@ if __name__ == "__main__":
         tile_bounds = mercantile.xy_bounds(tile)
 
         gdal = _gdal_read(f"/vsicurl/{src_path}", tile_bounds)
-        rio = _rio_tiler_read(src_path, tile_bounds)
+        src_paths[idx]["bench"]["gdal"] = gdal
 
-        src_paths[idx]["bench"] = {"gdal": gdal, "rio-tiler": rio}
+        rio = _rio_tiler_read(src_path, tile_bounds)
+        src_paths[idx]["bench"]["rio-tiler"] = rio
 
     print(json.dumps(src_paths, indent=4))

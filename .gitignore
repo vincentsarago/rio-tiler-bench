@@ -105,3 +105,4 @@ ENV/
 .pytest_cache
 
 bench*.json
+profile*.txt

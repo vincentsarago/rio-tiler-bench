@@ -1,19 +1,16 @@
 """tiler benchmark."""
 
-import sys
+import json
 import logging
 import pstats
 import cProfile
+from io import StringIO
 
 import mercantile
-
 import rasterio
-from rasterio import transform
 
-
+# from rasterio import transform
 from rio_tiler import utils
-
-logging.basicConfig(stream=sys.stderr, level=10)
 
 
 def profileit(func):
@@ -31,7 +28,17 @@ def profileit(func):
 
 @profileit
 def _rio_tiler_read(src_path, bounds, tilesize=256):
-    with rasterio.Env():
+    stream = StringIO()
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    for handler in logger.handlers:
+        logger.removeHandler(handler)
+
+    handler = logging.StreamHandler(stream)
+    logger.addHandler(handler)
+
+    config = dict(CPL_DEBUG="ON")
+    with rasterio.Env(**config):
         with rasterio.open(src_path) as src_dst:
             tile, _ = utils._tile_read(
                 src_dst,
@@ -41,6 +48,19 @@ def _rio_tiler_read(src_path, bounds, tilesize=256):
                 tile_edge_padding=0,
                 warp_vrt_option=dict(SOURCE_EXTRA=1),
             )
+
+    lines = stream.getvalue().splitlines()
+    get_requests = [
+        l
+        for l in lines
+        if l.replace("CPLE_None in ", "").startswith("VSICURL: Downloading ")
+    ]
+    get_values = [map(int, get.split(" ")[4].split("-")) for get in get_requests]
+    data_transfer = sum([j - i for i, j in get_values])
+
+    logger.removeHandler(handler)
+    handler.close()
+    print(json.dumps(dict(get_number=len(get_requests), data_transfer=data_transfer)))
     return tile
 
 
@@ -59,15 +79,15 @@ if __name__ == "__main__":
     # tile_bounds = mercantile.xy_bounds(tile)
     # tile = _rio_tiler_read(src_path, tile_bounds)
 
-    w, s, e, n = tile_bounds
-    dst_transform = transform.from_bounds(w, s, e, n, 256, 256)
-    with open(f"/local/{z}-{x}-{y}_centos.tif", "wb") as f:
-        f.write(
-            utils.array_to_image(
-                tile,
-                dtype=tile.dtype,
-                img_format="GTiff",
-                crs={"init": "EPSG:3857"},
-                transform=dst_transform,
-            )
-        )
+    # w, s, e, n = tile_bounds
+    # dst_transform = transform.from_bounds(w, s, e, n, 256, 256)
+    # with open(f"/local/{z}-{x}-{y}_centos.tif", "wb") as f:
+    #     f.write(
+    #         utils.array_to_image(
+    #             tile,
+    #             dtype=tile.dtype,
+    #             img_format="GTiff",
+    #             crs={"init": "EPSG:3857"},
+    #             transform=dst_transform,
+    #         )
+    #     )
