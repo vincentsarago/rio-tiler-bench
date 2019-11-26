@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server  
+    image: img:server
+    ports:
+      - "8000:8000"
+
+  gdal2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GDAL_VERSION: 2.4
+    volumes:
+      - '.:/local'
+    links:
+      - 'server:app'
+    environment:
+      - CPL_VSIL_CURL_ALLOWED_EXTENSIONS=.tif
+      - ENDPOINT=http://app:8000
+      - GDAL_CACHEMAX=25%
+      - GDAL_DISABLE_READDIR_ON_OPE=EMPTY_DIR
+      - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
+      - GDAL_HTTP_MULTIPLEX=YES
+      - GDAL_HTTP_MULTIRANGE=YES
+      - GDAL_HTTP_VERSION=2
+      - VSI_CACHE=TRUE
+      - VSI_CACHE_SIZE=536870912
+    command: >
+      bash -c 'python -m rio_tiler_bench > /local/benchmark_gdal2.4.json'
+
+  gdal3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GDAL_VERSION: 3.0
+    volumes:
+      - '.:/local'
+    links:
+      - 'server:app'
+    environment:
+      - CPL_VSIL_CURL_ALLOWED_EXTENSIONS=.tif
+      - ENDPOINT=http://app:8000
+      - GDAL_CACHEMAX=25%
+      - GDAL_DISABLE_READDIR_ON_OPE=EMPTY_DIR
+      - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
+      - GDAL_HTTP_MULTIPLEX=YES
+      - GDAL_HTTP_MULTIRANGE=YES
+      - GDAL_HTTP_VERSION=2
+      - VSI_CACHE=TRUE
+      - VSI_CACHE_SIZE=536870912
+    command: >
+      bash -c 'python -m rio_tiler_bench > /local/benchmark_gdal3.0.json'

@@ -1,0 +1,13 @@
+FROM python:3.7-alpine
+
+RUN \
+    wget https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_040013_20191014_20191029_01_T1_B4.tif \
+    && wget https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_201027_20191022_20191030_01_T1_B4.tif \
+    && wget https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_231097_20190906_20190917_01_T1_B4.tif \
+    && wget https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_224060_20171204_20171222_01_T1_B4.tif \
+    && wget https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_073087_20190818_20190902_01_T1_B4.tif \
+    && wget https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1GT_008113_20191115_20191115_01_RT_B4.tif \
+    && wget https://s3.amazonaws.com/opendata.remotepixel.ca/bench_tiler/LC08_L1TP_115077_20191113_20191115_01_T1_B4.tif
+
+RUN pip install rangehttpserver
+CMD python -m RangeHTTPServer
