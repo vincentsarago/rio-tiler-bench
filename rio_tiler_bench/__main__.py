@@ -21,6 +21,7 @@ FNULL = open(os.devnull, "w")
 
 def _gdal_read(src_path, bounds, tilesize=256):
     left, bottom, right, top = bounds
+
     cmd = f"""gdalwarp -q {src_path} out.tif \
     -te {left} {top} {right} {bottom} -t_srs EPSG:3857 \
     -ts {tilesize} {tilesize} -r bilinear \

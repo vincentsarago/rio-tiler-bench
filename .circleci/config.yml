@@ -8,7 +8,7 @@ common: &common
         command: pip install .
     - run:
         name: install rio-tiler WIP branch
-        command: pip install git+https://github.com/cogeotiff/rio-tiler.git@2f4ef42cdc78c74599c21be3c6e4d89bc6474753 -U
+        command: pip install git+https://github.com/cogeotiff/rio-tiler.git@e01078881d3e924d44556d94e7f10c73d4448b9c -U
     - run:
         name: run benchmark
         command: |
